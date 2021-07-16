@@ -1,9 +1,19 @@
 """Package setup file."""
 import os
 
-from pip.req import parse_requirements
+use_helper = False
+
+try:
+    from pip.req import parse_requirements
+except ModuleNotFoundError: # for pip >=10
+    use_helper = True
+
 from setuptools import find_packages, setup
 
+def parse_requirements_shim(filename):
+    """ load requirements from a pip requirements file """
+    lineiter = (line.strip() for line in open(filename))
+    return [line for line in lineiter if line and not line.startswith("#")]
 
 def get_version():
     """Return the current version."""
@@ -14,7 +24,7 @@ def get_version():
 
 def get_requirements(file):
     """Return a list of requirements from a file."""
-    requirements = parse_requirements(file, session=False)
+    requirements = parse_requirements_shim(file) if use_helper else parse_requirements(file, session=False)
     return [str(ir.req) for ir in requirements if not None]
 
 
